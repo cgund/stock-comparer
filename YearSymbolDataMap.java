@@ -1,65 +1,62 @@
 package stock;
 
 import java.io.*;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 /*
 Maps stock exchange trading date to map that maps company symbol to daily stock data
 */
-public class YearSymbolDataMap 
-{ 
+public class YearSymbolDataMap
+{
     //Creates and returns map
-    public static Map<String, Map<String, List<String>>> create()
-    {            
-        String path = "NYSE_2014";
-        File dir = new File(path);
-        File[] arrayFiles = dir.listFiles();
-        //Map(Key: FileName(Date) -> Value: Map(Key: CompanyStockSymbol -> Value: StockData))
-        Map<String, Map<String, List<String>>> mYearly = new HashMap();
-        Scanner scanner = null;
-        for (File file: arrayFiles)
+    public static Map<String, Map<String, List<String>>> create() throws IOException
+    {  
+        Map<String, Map<String, List<String>>> mYearly = new HashMap();        
+
+        JarFile jar = new JarFile("StockComparer.jar");
+        Enumeration<JarEntry> entries = jar.entries();
+        int counter = 0;
+        while (entries.hasMoreElements() && counter < 146) 
         {
-            try
+            JarEntry entry = entries.nextElement();
+            String name = entry.getName();
+            if (name.contains("NYSE"))
             {
+                int index = name.indexOf('N');
+                String resource = name.substring(index, name.length());
                 //Key: CompanyStockSymbol -> Value: StockData
                 Map<String, List<String>> mDaily = new HashMap();
-                scanner = new Scanner(new BufferedReader(new FileReader(file)));
-                while (scanner.hasNext())
+                InputStream inStream = YearSymbolDataMap.class.getResourceAsStream("resources/" + resource);
+                try (Scanner scanner = new Scanner(new BufferedReader(
+                        new InputStreamReader(inStream)))) 
                 {
-                    String line = scanner.nextLine();
-                    String[] array = line.split(",");
-
-                    String stockSymbol = array[0];
-                    List<String> stockData = new ArrayList<>();
-                    for (int i = 1; i < array.length; i++)
+                    while (scanner.hasNext())
                     {
-                        stockData.add(array[i]);
+                        String line = scanner.nextLine();
+                        String[] array = line.split(",");
+                        
+                        String stockSymbol = array[0];
+                        List<String> stockData = new ArrayList<>();
+                        for (int i = 1; i < array.length; i++)
+                        {
+                            stockData.add(array[i]);
+                        }
+                        mDaily.put(stockSymbol, stockData);
                     }
-                    mDaily.put(stockSymbol, stockData);
-                    
+                    scanner.close();
                 }
-                scanner.close();
-                String key = file.toString();
-                key = key.substring(15, 23);
+                String key = resource;
+                key = key.substring(5, 13);
                 String year = key.substring(0, 4);
                 String month = key.substring(4, 6);
                 String day = key.substring(6, key.length());
                 key = year + "-" + month + "-" + day;
                 mYearly.put(key, mDaily);
             }
-            catch(FileNotFoundException ex)
-            {
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.setHeaderText("File IO Error");
-                alert.setContentText("File Not Found");
-                alert.show();
-            }            
-        }
-        if (scanner != null)
-        {
-            scanner.close();
+            counter++;
         }
         return mYearly;
     }

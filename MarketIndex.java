@@ -9,13 +9,16 @@ Encapsulates stock market index data
 public class MarketIndex 
 {
     private final String name; //name of market index
-    private final String path; //file path
     private Map<String, Double> mMarketIndex; //Date -> Aggregate Daily Value
+    private final InputStream input;
     
-    public MarketIndex(String name, String path)
+    public MarketIndex(String name, String resourcePath)
     {
         this.name = name;
-        this.path = path;
+        if (resourcePath != null)
+            input = this.getClass().getResourceAsStream(resourcePath);            
+        else
+            this.input = null;
     }
     
     /*
@@ -24,46 +27,36 @@ public class MarketIndex
     public Map<String, Double> map()
     {        
         mMarketIndex = new HashMap<>();
-        try
+        Scanner scanner = new Scanner(new BufferedReader(new InputStreamReader(input)));
+        while (scanner.hasNext())
         {
-            try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(path)))) 
+            String line = scanner.nextLine();
+            String[] parts = line.split(",");
+            if (parts.length == 2)
             {
-                while (scanner.hasNext())
+                String date = parts[0];
+                String[] array = date.split("/");
+                if (array.length == 3)
                 {
-                    String line = scanner.nextLine();
-                    String[] parts = line.split(",");
-                    if (parts.length == 2)
+                    String year = array[2];
+                    String day = array[1];
+                    if (day.length() == 1)
                     {
-                        String date = parts[0];
-                        String[] array = date.split("/");
-                        if (array.length == 3)
-                        {
-                            String year = array[2];
-                            String day = array[1];
-                            if (day.length() == 1)
-                            {
-                                day = "0" + day;
-                            }
-                            String month = array[0];
-                            if (month.length() == 1)
-                            {
-                                month = "0" + month;
-                            }
-                            date = year + "-" + month + "-" + day;
-                        }
-                        
-                        String average = parts[1];
-                        Double dblAverage = Double.parseDouble(average);
-                        mMarketIndex.put(date, dblAverage);                        
+                        day = "0" + day;
                     }
+                    String month = array[0];
+                    if (month.length() == 1)
+                    {
+                        month = "0" + month;
+                    }
+                    date = year + "-" + month + "-" + day;
                 }
+
+                String average = parts[1];
+                Double dblAverage = Double.parseDouble(average);
+                mMarketIndex.put(date, dblAverage);                        
             }
         }
-        catch(FileNotFoundException ex)
-        {
-            System.err.println(ex);
-        }
-        
         return mMarketIndex;
     }
     

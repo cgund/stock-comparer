@@ -1,9 +1,7 @@
 package stock;
 
-
 import java.io.*;
 import java.util.*;
-import javafx.scene.control.Alert;
 
 /*
 Maps stock symbol to company name associated with symbol
@@ -15,45 +13,34 @@ public class SymbolNameMap
     {
         Map<String, String> mSymbolName = new HashMap<>();
         
-        String path = "companylist.csv";
-        try
+        String resourcePath = "resources/companylist.csv";
+        InputStream input = SymbolNameMap.class.getResourceAsStream(resourcePath);
+        Scanner scanner = new Scanner(new BufferedReader(new InputStreamReader(input))); 
+        scanner.nextLine();
+        while (scanner.hasNext())
         {
-            try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(path)))) 
+            String line = scanner.nextLine();
+            int index = line.indexOf("\"");
+            if (index >= 0)
             {
-                scanner.nextLine();
-                while (scanner.hasNext())
+                String companyName = line.substring(index + 1, line.indexOf("\"", index + 1));
+                String[] array = line.split(",");
+                if (array.length >= 2)
                 {
-                    String line = scanner.nextLine();
-                    int index = line.indexOf("\"");
-                    if (index >= 0)
-                    {
-                        String companyName = line.substring(index + 1, line.indexOf("\"", index + 1));
-                        String[] array = line.split(",");
-                        if (array.length >= 2)
-                        {
-                            String symbol = array[0];
-                            mSymbolName.put(symbol, companyName);
-                        }
-                    }
-                    else
-                    {
-                        String[] array = line.split(",");
-                        if (array.length >= 2)
-                        {
-                            String symbol = array[0];
-                            String company = array[1];
-                            mSymbolName.put(symbol, company);
-                        }
-                    }
+                    String symbol = array[0];
+                    mSymbolName.put(symbol, companyName);
                 }
             }
-        }
-        catch(FileNotFoundException ex)
-        {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setHeaderText("File IO Error");
-            alert.setContentText("File Not Found");
-            alert.show();
+            else
+            {
+                String[] array = line.split(",");
+                if (array.length >= 2)
+                {
+                    String symbol = array[0];
+                    String company = array[1];
+                    mSymbolName.put(symbol, company);
+                }
+            }
         }
         return mSymbolName;
     }   

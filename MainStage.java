@@ -1,5 +1,6 @@
 package stock;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
@@ -43,7 +44,7 @@ public class MainStage extends Application
     private DatePicker dpEnd;
     private ComboBox<MarketIndex> cbCompare;
     private final LocalDate MIN_DATE = LocalDate.of(2014, Month.JANUARY, 1);
-    private final LocalDate MAX_DATE = LocalDate.of(2014, Month.DECEMBER, 31);
+    private final LocalDate MAX_DATE = LocalDate.of(2014, Month.JUNE, 30);
     private boolean searchStageLoaded = false;  
     //Maps to hold stock data
     protected static Map<String,Map<String, List<String>>> mYear_mSymbolData;
@@ -65,7 +66,18 @@ public class MainStage extends Application
         primaryStage.setTitle("Stock Comparer");
         primaryStage.setScene(scene);
         primaryStage.show();
-        mYear_mSymbolData = YearSymbolDataMap.create(); //Primary map
+        try
+        {
+            mYear_mSymbolData = YearSymbolDataMap.create(); //Primary map
+        }
+        catch (IOException ex)
+        {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("IO Error");
+            alert.setHeaderText(null);
+            alert.setContentText(ex.getMessage());
+            alert.show();
+        }
         mNameSymbol = NameSymbolMap.create(); //Company name -> symbol map
         mSymbolName = SymbolNameMap.create(); //Company symbol -> name map      
     }
@@ -174,10 +186,11 @@ public class MainStage extends Application
     {
         cbCompare = new ComboBox<>();
         //Sets the list of MarketIndex items to show within the ComboBox popup
-        cbCompare.getItems().addAll(new MarketIndex(null, null),
-                new MarketIndex("Dow Jones Industrial Average", "DJIA.csv"),
-                new MarketIndex("S&P 500", "SP500.csv"),
-                new MarketIndex("NASDAQ Composite", "NASDAQ_COMP.csv"));
+        cbCompare.getItems().addAll(
+                new MarketIndex("---", null),
+                new MarketIndex("Dow Jones Industrial Average", "resources/DJIA.csv"),
+                new MarketIndex("S&P 500", "resources/SP500.csv"),
+                new MarketIndex("NASDAQ Composite", "resources/NASDAQ_COMP.csv"));
         cbCompare.setValue(cbCompare.getItems().get(0));
         cbCompare.setEditable(false);
         return cbCompare;
@@ -214,7 +227,7 @@ public class MainStage extends Application
                 String symbol = txtSymbol.getText().toUpperCase().trim();
                 if (mSymbolName.containsKey(symbol)) //Map contains symbol
                 {
-                    if (cbCompare.getValue().getName() == null) 
+                    if (cbCompare.getValue().getName().equals("---")) 
                     { //No MarketIndex selected
                         DisplayStage ds = new DisplayStage(symbol, 
                                 mYear_mSymbolData, startDate, endDate);
@@ -222,7 +235,7 @@ public class MainStage extends Application
                     }
                     else //MarketIndex selected
                     {
-                        MarketIndex mi = cbCompare.getValue();
+                        MarketIndex mi = cbCompare.getValue();                       
                         DisplayStage ds = new DisplayStage(symbol, 
                                 mYear_mSymbolData, startDate, endDate);
                         ds.displayStockVsIndex(mi);                           

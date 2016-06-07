@@ -26,7 +26,7 @@ public class DisplayStage
     private String symbol;
     private final Map<String,Map<String, List<String>>> mYearly;
     private List<String> alDates; //NYSE trading dates
-    private final ArrayList<MarketIndex> alMarketIndexes = new ArrayList<>();
+    private final static ArrayList<MarketIndex> alMarketIndexes = new ArrayList<>();
     private static final Double INIT_INVESTMENT = 100000.00;
     private final int startDate;
     private final int endDate;
@@ -46,8 +46,8 @@ public class DisplayStage
     @param sDate The start date of the query
     @param eDate The end date of the query
     */
-    public DisplayStage(String symbol, Map<String,Map<String, List<String>>> mYearly, 
-                                        LocalDate sDate, LocalDate eDate)
+    public DisplayStage(String symbol, Map<String,Map<String, List<String>>> mYearly,
+           LocalDate sDate, LocalDate eDate)
     {
         this.symbol = symbol;
         this.mYearly = mYearly;
@@ -107,8 +107,7 @@ public class DisplayStage
         Double numStocks = INIT_INVESTMENT/dblClosingPrice; //Number of stocks purchased
         
         Map<String, Double> mapMI = mapMarketIndex(mi);
-        List<String> alIndexDates = sortMarketIndexDates(mapMI);
-            
+        List<String> alIndexDates = sortMarketIndexDates(mapMI); 
         String startIndexDate = alIndexDates.get(startDate);
         Double startIndexPrice = mapMI.get(startIndexDate);
         
